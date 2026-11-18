@@ -7,7 +7,10 @@ const morgan = require('morgan');
 const healthRoutes = require('./routes/healthRoutes');
 const authRoutes = require('./routes/authRoutes');
 const adminUserRoutes = require('./routes/adminUserRoutes');
+const farmerRoutes = require('./routes/farmerRoutes');
+const marketplaceRoutes = require('./routes/marketplaceRoutes');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
+const path = require('node:path');
 
 const app = express();
 const configuredOrigins = (process.env.FRONTEND_ORIGINS || '')
@@ -28,9 +31,12 @@ app.use(cors({
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), { dotfiles: 'deny', index: false }));
 app.use('/api', healthRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/admin/users', adminUserRoutes);
+app.use('/api/farmer', farmerRoutes);
+app.use('/api/marketplace', marketplaceRoutes);
 app.use(notFound);
 app.use(errorHandler);
 
