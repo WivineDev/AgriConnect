@@ -1,0 +1,70 @@
+{
+  "info": {
+    "name": "AgriConnect Admin Farmer Creation",
+    "description": "Log in as admin to save a bearer token, then create a farmer account. Fill the collection variables before sending requests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000", "type": "string" },
+    { "key": "adminEmail", "value": "", "type": "string" },
+    { "key": "adminPassword", "value": "", "type": "secret" },
+    { "key": "adminToken", "value": "", "type": "secret" },
+    { "key": "farmerFullName", "value": "Aline Uwimana", "type": "string" },
+    { "key": "farmerEmail", "value": "", "type": "string" },
+    { "key": "farmerPhone", "value": "0781234567", "type": "string" },
+    { "key": "farmerPassword", "value": "", "type": "secret" },
+    { "key": "farmerDistrict", "value": "Demo District", "type": "string" },
+    { "key": "farmerLocation", "value": "Demo Village", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "1. Admin login (saves token)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{baseUrl}}/api/auth/login"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const body = pm.response.json();",
+              "if (pm.response.code === 200 && body.data && body.data.user && body.data.user.role === 'ADMIN' && body.data.token) {",
+              "  pm.collectionVariables.set('adminToken', body.data.token);",
+              "  pm.test('Admin token saved for the farmer request', function () { pm.expect(body.data.token).to.be.a('string').and.not.empty; });",
+              "} else {",
+              "  pm.collectionVariables.unset('adminToken');",
+              "  pm.test('Admin login succeeded', function () { pm.expect.fail(body.message || 'Login failed or account is not ADMIN'); });",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Create farmer (uses saved admin token)",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+        },
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"fullName\": \"{{farmerFullName}}\",\n  \"email\": \"{{farmerEmail}}\",\n  \"phone\": \"{{farmerPhone}}\",\n  \"password\": \"{{farmerPassword}}\",\n  \"confirmPassword\": \"{{farmerPassword}}\",\n  \"district\": \"{{farmerDistrict}}\",\n  \"generalLocation\": \"{{farmerLocation}}\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{baseUrl}}/api/auth/register/farmer"
+      },
+      "response": []
+    }
+  ]
+}
